@@ -6,33 +6,29 @@
         public string Path;
         public bool EnableRaisingEvents = false;
 
-        public event EventHandler? FileFound = null;
+        public event EventHandler? FileFoundEventHandler = null;
 
         public FileWatcher(string path)
         {
             Path = path;
-            Start();
         }
 
-        private async void Start()
+        public async Task Start(Func<bool> stopCallBack)
         {
-            InProcess = true;
+            InProcess = true; 
 
             await Task.Run(() =>
             {
                 foreach (string fileName in Directory.EnumerateFiles(Path, "*", SearchOption.AllDirectories))
                 {
-                    if (!InProcess) break;
+                    if (!InProcess || stopCallBack()) break;
 
                     if (EnableRaisingEvents)
                     {
-                        FileFound?.Invoke(this, new FileArgs() { FileName = fileName });
+                        FileFoundEventHandler?.Invoke(this, new FileArgs() { FileName = fileName });
                     }
 
-                    // Для того, чтобы можно было успеть остановить просмотр файлов.
-                    Thread.Sleep(2000);
                 }
-                Console.WriteLine("=====End of file watch=====");
             });
         }
 

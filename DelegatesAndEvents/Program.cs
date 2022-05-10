@@ -4,7 +4,7 @@ namespace DelegatesAndEvents
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             // 1.
             var someList = new List<string>() { "1", "7,1", "33,3", "-22" };
@@ -12,38 +12,9 @@ namespace DelegatesAndEvents
 
             // 2.
             using var watcher = new FileWatcher(@".\");
-
-            watcher.FileFound += OnFileFound;
+            watcher.FileFoundEventHandler += OnFileFound;
             watcher.EnableRaisingEvents = true;
-
-            string? res;
-            do
-            {
-                Console.WriteLine("Enter command:");
-                Console.WriteLine("SW - stop watcher");
-                Console.WriteLine("SE - stop events");
-                Console.WriteLine("E - exit");
-
-                res = Console.ReadLine();
-
-                switch (res)
-                {
-                    case "SW":
-                        watcher.Stop();
-                        break;
-                    case "SE":
-                        Console.WriteLine("Events stopped, but watcher still working");
-                        watcher.EnableRaisingEvents = false;
-                        break;
-                    case "E":
-                        Console.WriteLine("Program closing..");
-                        return;
-                    default:
-                        Console.WriteLine("*Unknown command*");
-                        break;
-                }
-            }
-            while (res is null || res == String.Empty || res != "E");
+            await watcher.Start(AskForStop);
         }
 
         // 1.
@@ -60,6 +31,14 @@ namespace DelegatesAndEvents
         }
 
         // 2.
+        private static bool AskForStop()
+        {
+            Console.Write("Stop watch files? (Press f to Pay Respects): ");
+            ConsoleKeyInfo input = Console.ReadKey();
+            Console.WriteLine();
+            return input == new ConsoleKeyInfo('f', ConsoleKey.F, false, false, false);
+        }
+
         private static void OnFileFound(object? sender, EventArgs e)
         {
             Console.WriteLine($"Found: {((FileArgs)e).FileName}");
